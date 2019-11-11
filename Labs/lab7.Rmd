@@ -1,0 +1,86 @@
+---
+title: "Lab 7"
+author: "Brad McNeney"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=FALSE,message=FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(stringr)
+library(ggplot2)
+```
+
+## Graphing youth unemployment data
+
+1. Read the youth unemployment data in the file
+`API_ILO_country_YU.csv` in the `labs` folder of GitHub
+into a data frame called `youthUI`. 
+```{r}
+youthUI <- read_csv("API_ILO_country_YU.csv")
+youthUI
+```
+
+2. Reshape the data on different years into key-value pairs 
+with key `year` and value `Unemployment Rate`. Convert the 
+`year` column to numeric.
+```{r}
+youthUI <-youthUI %>%
+  gather(`2010`:`2014`, key = year, value = `Unemployment Rate`, na.rm = TRUE, convert = TRUE) %>%
+  mutate(year = as.numeric(year)) 
+youthUI
+youthUI %>% 
+  summarise(sd(year))
+
+
+```
+
+3. Plot unemployment rates by year 
+for each "country" in `youthUI`. Represent each time series
+by a line. Use an appropriate alpha level to manage overplotting.
+```{r}
+youthUI %>%
+  ggplot() + geom_line(mapping = aes(x = year, y = `Unemployment Rate`, group = `Country Name`, alpha = 0.01))
+```
+
+4. Using a **regular expression**, extract the subset 
+of "Countries" whose `Country.Name` contains the string
+"(IDA & IBRD countries)", and save in a data frame
+`youthDevel`. (No cheating by using `fixed()`. 
+Hint: `(` is a special character string,
+so a character string representation of a regexp 
+involving `(` would include `"\\(".) Using a **regular expression**,
+remove the "(IDA * IBRD countries)" from the country names.
+Notes: IDA stands for International Development Association.
+Countries that qualify for IDA loans are considered among
+the poorest developing countries in the world. 
+IBRD stands for International Bank
+for Reconstruction and Developent. IBRD countries are considered
+middle-income developing countries.
+```{r}
+youthDevel <- youthUI %>%
+  filter(str_detect(`Country Name`,"\\(IDA & IBRD.*\\)"))
+youthDevel
+```
+
+5. Plot unemployment rates by year 
+for each region in `youthDevel` with different colors for each region. 
+Your plot should include both points and lines for each region.
+Then add a layer that plots the world-wide unemployment data 
+from `youthUI` (`Country.Name==World`).
+```{r}
+
+world <- filter(youthUI, `Country Name`=="World")
+ggplot(mapping = aes(x = year, y = `Unemployment Rate`, group = `Country Name`, alpha = 0.01, color = `Country Name`)) + 
+  geom_line(data = youthDevel) + 
+  geom_point(data = youthDevel)+
+  geom_point(data=world)+
+  geom_line(data=world)
+```
+
+
+
+

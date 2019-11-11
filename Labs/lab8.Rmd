@@ -1,0 +1,64 @@
+---
+title: "Lab 8"
+author: "Brad McNeney"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=FALSE,message=FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(forcats)
+library(lubridate)
+yvr <- read_csv("weatherYVR.csv")
+yvr
+```
+
+In the above code chunk you read in **daily** weather
+data from YVR in 2003.
+
+1. Coerce the `Date/Time` variable to a date object
+and rename it Date.
+```{r}
+lab <- yvr %>%
+  mutate(`Date/Time` = ymd(`Date/Time`, tz = "America/Vancouver")) %>% 
+  rename(Date = `Date/Time`)
+lab
+```
+
+2. Do a time series plot (with lines) 
+of the daily maximum temperature by day.
+```{r}
+lab %>% 
+  ggplot(mapping = aes(x = Date, y = `Max Temp`)) + 
+  geom_line()
+```
+
+3. Change the `Month` variable from 
+numeric to a factor.
+(Hint: The `month()` function with the `label=TRUE` will
+extract the months from a date-time object.)
+```{r}
+lab <- lab %>% 
+  mutate(Month = month(Date, label = TRUE))
+lab
+```
+
+4. Plot the average maximum temperature *versus* month,.
+Redo this plot with months ordered by 
+average maximum.
+```{r}
+lab %>% 
+  group_by(Month) %>%
+  summarise(mean = mean(`Max Temp`)) %>%
+  ggplot(mapping = aes(x = Month, y = `mean`)) + 
+  geom_point()
+```
+```{r}
+lab %>% 
+  group_by(Month) %>%
+  summarise(mean = mean(`Max Temp`)) %>%
+  ggplot(mapping = aes(x = fct_reorder(Month, mean), y = mean)) + geom_point()
+```

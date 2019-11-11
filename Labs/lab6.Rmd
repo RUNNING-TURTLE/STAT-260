@@ -1,0 +1,66 @@
+---
+title: "Lab 6"
+author: "Brad McNeney"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE,warning=FALSE,message=FALSE)
+```
+
+```{r}
+library(tidyverse)
+library(nycflights13)
+```
+
+In this lab we will work with the `nycflights13` data.
+
+1. Add the latitude and longitude of each 
+airport destination to the `flights` table.
+You will find the data on latitude and longitude
+in the `airports` table.
+```{r}
+data <- airports %>% 
+  select(faa, lat, lon)
+data <- flights %>% semi_join(data, by = c("origin" = "faa"), na.rm = TRUE)
+data
+```
+
+2. Create a table with the
+year-month-day-flight-tailnum
+combinations that have more than 1 flight (careful about
+missing tailnum). Use this table to filter the flights
+table and then select carrire, flight, origin and dest.
+Which airline used the same flight number for a plane
+that made a trip from La Guardia to St. Louis in 
+the morning and from Newark to Denver in the afternoon.
+```{r}
+flights %>% 
+  count(year, month, day, flight, tail_num) %>%
+  filter(n > 1, !is.na(tail_num)) %>%
+  left_join(flights) %>%
+  select(carrier, flight, origin, dest)
+```
+
+3. One of the exercises in the lecture 7 notes asked you
+to create a table called `top_dep_delay` from
+the flights table. 
+`top_dep_delay` was
+comprised of the year-month-days with the 
+3 largest total delays, where total delay
+is defined as the sum of the `dep_delay` variable
+for each year-month-day. 
+Recreate `top_dep_delay` for this lab exercise.
+For each of the three top-delay days, 
+report the median, third quartile and maximum
+of the dep_delay variable in `flights`.
+```{r}
+flights %>% 
+  group_by(year, month, day) %>%
+  summarize( sum=sum(dep_delay, na.rm = TRUE), median=median(dep_delay, na.rm = TRUE), max=max(dep_delay, na.rm = TRUE), Q3=quantile(dep_delay, probs = .75, na.rm = TRUE)) %>% 
+  arrange(-`sum`) %>%
+  filter(sum > 46675) %>%
+  arrange(-max)
+  
+```
+
